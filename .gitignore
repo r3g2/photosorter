@@ -1,0 +1,6 @@
+data/
+.*
+**/.*
+**/__*__
+photosorter/uploads/
+photosorter/temp/

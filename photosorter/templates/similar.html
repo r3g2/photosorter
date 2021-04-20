@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Similar Images</title>
+
+  </head>
+  <body>
+    <h1>Similar Images</h1>
+    <form method="POST" action="/">
+        <input type="submit" name="home_button" value="Home"></p>
+    </form>
+    <form method="POST" action="/similarimages" enctype="multipart/form-data">
+        <p><input type="file" name="query"></p>
+        <p><input type="submit" value="Search Similar"></p>
+    </form>
+ 
+    <hr>
+    <p>Query Image:</p>
+    <img src="{{ url_for('temp_uploaded', filename=query_image) }}" style="height: 64px; width: 64px">
+    <hr>
+    {% for item in similarities %}
+        <p>Similarity Score: {{item[1]}}</p>
+        <img src="{{ url_for('uploaded', filename=item[0].fname) }}" style="height: 64px; width: 64px">
+    {% endfor %}
+ 
+  </body>
+</html>
