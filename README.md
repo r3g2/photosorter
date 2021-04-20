@@ -2,6 +2,10 @@
 
 PhotoSorter is a web app that allows users to upload photos. Then perform various actions like finding duplicates and image search.
 
+[My image](r3g2.github.com/photosorter/photosorter_frontpage.png)
+
+
+
 ## Installation
 
 From the root use conda to create the environment and install the packages needed:
