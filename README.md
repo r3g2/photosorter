@@ -2,7 +2,7 @@
 
 PhotoSorter is a web app that allows users to upload photos. Then perform various actions like finding duplicates and image search.
 
-[My image](r3g2.github.com/photosorter/photosorter_frontpage.png)
+![Alt text](./photosorter_frontpage.png?raw=true "Home Page")
 
 
 
