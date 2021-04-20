@@ -43,7 +43,7 @@ def upload_files():
         
         uploaded_files = request.files.getlist("images")
 
-        #TODO Check how to get foldername and where to save
+        
         save_path = app.config['UPLOAD_FOLDER']
         color_save_path = os.path.join(app.config['COLORED_DIRECTORY'])
         if not os.path.exists(color_save_path):
@@ -59,7 +59,7 @@ def upload_files():
         for p in photosorter.photos:
             if p.color:
                 shutil.copy(os.path.join(p.cur_dir,p.fname),os.path.join(color_save_path,p.fname))
-        # TODO decide what to do once the user uploads files
+       
         return redirect(url_for('index'))
 
 @app.route('/uploads/<filename>')
