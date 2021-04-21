@@ -32,20 +32,19 @@ class PhotoSorter:
         else:
             return [p.data for p in self.photos]
 
-    # def _set_photo_features(self,features):
-    #     rows,cols = features.shape
-    #     if rows != len(self.photos):
-    #         print("Can't do this operation because the")
-    #     for i in range(len(photos))
 
     def load_images(self,size=(224,224),resize_method=cv2.INTER_LINEAR):
         image_fnames = os.listdir(self.image_dir)
         photos = []
         for fname in image_fnames:
-            image_data = cv2.imread(os.path.join(self.image_dir,fname))
-            resized_data = cv2.resize(image_data,size,interpolation=resize_method)
-            color = True if resized_data.shape[2] == 3 else False
-            photos.append(Photo(fname,resized_data,self.image_dir,color=color))
+            try:
+                image_data = cv2.imread(os.path.join(self.image_dir,fname))
+                resized_data = cv2.resize(image_data,size,interpolation=resize_method)
+                color = True if resized_data.shape[2] == 3 else False
+                photos.append(Photo(fname,resized_data,self.image_dir,color=color))
+            except Exception as e:
+                print("Couldn't load %s because %s" % (fname,e))
+
         self.photos = photos
         return photos
     
@@ -157,7 +156,8 @@ def test_query_similar():
 def test_get_image_clusters():
     data_path = "/Users/rickgentry/Spring 2021/computer_vision/final_project/data/color_test_data"
     kmeans,features = cluster_images(data_path)
-    groups = get_image_clusters(data_path,kmeans)
+    filepaths = [t[0] for t in features]
+    groups = get_image_clusters(filepaths,kmeans)
     images = [cv2.imread(fname) for fname in groups[0]]
     show_images(1,len(images), images)
 
@@ -191,7 +191,7 @@ def test_resize_duplicates():
     ps.display_duplicates(duplicates[:5])
 
 if __name__ == "__main__":
-    test_query_similar()
+    test_get_image_clusters()
 
 
 

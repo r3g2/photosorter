@@ -6,6 +6,7 @@ from werkzeug.utils import secure_filename
 from PhotoSorter import Photo, PhotoSorter
 from utils import *
 import logging
+from features import *
 
 logging.basicConfig(level=logging.DEBUG, format=f'%(asctime)s %(levelname)s %(name)s %(threadName)s : %(message)s')
 
@@ -16,11 +17,11 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
 app = Flask(__name__)
 app.config['TEMP_FOLDER'] = os.path.join(os.path.dirname(os.path.realpath(__file__)),'temp')
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['UPLOAD_FOLDER'] = os.path.join(UPLOAD_FOLDER,"all")
 app.config['COLORED_DIRECTORY'] = os.path.join(UPLOAD_FOLDER,"colored_images")
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg'}
 
-photosorter = PhotoSorter(UPLOAD_FOLDER)
+photosorter = PhotoSorter(app.config['UPLOAD_FOLDER'])
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -45,9 +46,9 @@ def upload_files():
 
         
         save_path = app.config['UPLOAD_FOLDER']
-        color_save_path = os.path.join(app.config['COLORED_DIRECTORY'])
-        if not os.path.exists(color_save_path):
-            os.mkdir(color_save_path)
+        
+        if not os.path.exists(app.config['COLORED_DIRECTORY']):
+            os.mkdir(app.config['COLORED_DIRECTORY'])
         for file in uploaded_files:
             # If user doesn't select files then it will have an empty filename
             if file != '':
@@ -58,7 +59,7 @@ def upload_files():
         photosorter.load_images()
         for p in photosorter.photos:
             if p.color:
-                shutil.copy(os.path.join(p.cur_dir,p.fname),os.path.join(color_save_path,p.fname))
+                shutil.copy(os.path.join(p.cur_dir,p.fname),os.path.join(app.config['COLORED_DIRECTORY'],p.fname))
        
         return redirect(url_for('index'))
 
@@ -69,6 +70,11 @@ def uploaded(filename):
 @app.route('/uploads/temp/<filename>')
 def temp_uploaded(filename):
     return send_from_directory(app.config['TEMP_FOLDER'], filename)
+
+@app.route('/uploads/color/<filename>')
+def color_uploaded(filename):
+    return send_from_directory(app.config['COLORED_DIRECTORY'], filename)
+
 
 @app.route('/duplicates', methods=["POST"])
 def find_duplicates():
@@ -106,11 +112,22 @@ def remove_upload():
                 os.unlink(path)
         except Exception as e:
             print("Couldn't delete %s because %s" % (path,e))
+    for filename in os.listdir(app.config['COLORED_DIRECTORY']):
+        path = os.path.join(app.config['COLORED_DIRECTORY'],filename)
+        try:
+            if os.path.isfile(path):
+                os.unlink(path)
+        except Exception as e:
+            print("Couldn't delete %s because %s" % (path,e))
     return redirect(url_for('index'))
 
-@app.route('/group/<numberofgroups>')
-def group_images(numberofgroups):
-    pass
+@app.route('/group', methods=["POST"])
+def group_images():
+    data_path = app.config['COLORED_DIRECTORY']
+    kmeans,features = cluster_images(data_path)
+    filepaths = [t[0] for t in features]
+    groups = get_image_clusters(filepaths,kmeans)
+    return render_template('group.html',groups=groups)
 
 if __name__ == '__main__':
     app.run(debug=True)

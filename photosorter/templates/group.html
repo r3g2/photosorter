@@ -1,0 +1,22 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Grouped Images</title>
+
+  </head>
+  <body>
+    <h1>Grouped Images</h1>
+    <form method="POST" action="/">
+        <input type="submit" name="home_button" value="Home"></p>
+    </form>
+
+    <hr>
+
+    {% for group in groups %}
+        {% for file in group %}
+            <img src="{{ url_for('uploaded', filename=file) }}" style="height: 64px; width: 64px">
+        {% endfor %}
+      <hr>
+    {% endfor %}
+  </body>
+</html>

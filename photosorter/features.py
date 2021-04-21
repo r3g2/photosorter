@@ -15,11 +15,29 @@ from sklearn.cluster import KMeans
 from sklearn.preprocessing import normalize as norm_features
 
 ####################################################
+
+def get_image_from_file(filename):
+    '''
+    Gets an image from a file for tensorflow dataset
+    '''
+    file = tf.io.read_file(filename)
+    image = tf.image.decode_image(file)
+    return {'image': image, 'fname': filename}
+
+
+def create_dataset(data_dir,size=[224,224]):
+    '''
+    Creates a dataset for tensorflow model
+    '''
+    files = [os.path.join(data_dir,fname) for fname in os.listdir(data_dir)]
+    dataset = tf.data.Dataset.from_tensor_slices(files)
+    dataset = dataset.map(get_image_from_file)
+    return dataset
+
 def build_feature_extractor(img_shape=(224,224,3)):
     '''
     Builds a pre-trained CNN feature extraction model
     '''
-
     preprocess_input = tf.keras.applications.mobilenet_v2.preprocess_input
     base_model = tf.keras.applications.MobileNetV2(input_shape=img_shape,include_top=False,weights='imagenet')
     global_average_layer = tf.keras.layers.GlobalAveragePooling2D()
@@ -30,12 +48,18 @@ def build_feature_extractor(img_shape=(224,224,3)):
     model = tf.keras.Model(inputs,outputs)
     return model
 
-def extract_features(model,dataset):
+def extract_features(model,ds):
     '''
     Takes in a feature extraction network and predicts on the dataset to return features
     '''
-    features = model.predict(dataset,batch_size=64)
-    return features
+    img_features = []
+    for x in iter(ds):
+        img = tf.expand_dims(tf.image.resize(x['image'],[224,224]),axis=0)
+        if img.shape.as_list() != [1,224,224,3]:
+            print(img.shape,x['fname'].numpy().decode('utf-8'))
+        features = model.predict(img,batch_size=1)
+        img_features.append((x['fname'].numpy().decode('utf-8'),features))
+    return img_features
 
 def cluster(features,n_clusters=10,normalize=True):
     '''
@@ -52,22 +76,21 @@ def apply_PCA(features,n_components=100):
     pca_features = pca.transform(features)
     return pca_features
 
-def cluster_images(dataset_dir,batch_size=64, img_size=(224,224)):
+def cluster_images(dataset_dir,img_size=(224,224)):
     img_shape = img_size + (3,)
     model = build_feature_extractor(img_shape)
-    dataset = image_dataset_from_directory(dataset_dir,shuffle=False,label_mode=None, batch_size=batch_size, image_size=img_size)
+    dataset = create_dataset(dataset_dir,size=list(img_size))
     features = extract_features(model,dataset)
-    kmeans = cluster(features)
+    feature_matrix = np.stack([t[1].squeeze() for t in features],axis=0)
+    kmeans = cluster(feature_matrix)
     return kmeans, features
 
-def get_image_clusters(dataset_dir,kmeans):
-    fnames = os.listdir(dataset_dir)
-    assert len(fnames) == len(kmeans.labels_)
+def get_image_clusters(file_paths,kmeans):
     num_groups = kmeans.n_clusters
     group_l = [[] for i in range(num_groups)]
     for i in range(len(kmeans.labels_)):
         group = kmeans.labels_[i]
-        group_l[group].append(fnames[i])
+        group_l[group].append(os.path.basename(file_paths[i]))
     return group_l
 
 
@@ -95,7 +118,7 @@ def similarity(img1,img2, color=True, full=False):
         mean_sim = structural_similarity(img1,img2,full=full, multichannel=color,gaussian_weights=True,sigma=1.5)
     return mean_sim,diff_mat
 
-    
+
 
 def feature_comparison(des1,des2):
     '''
@@ -108,6 +131,7 @@ def feature_comparison(des1,des2):
         if m.distance < 0.75*n.distance:
             good_matches.append([m])
     return good_matches
+
 
 
  #################### TESTING ##############################

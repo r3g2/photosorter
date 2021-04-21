@@ -6,21 +6,21 @@
   <body>
     <h1>Photo Sorter</h1>
     <hr>
-    <div class="container" id="uploader" style="float:left; height:100px; width:300px;">
+    <div class="container" id="uploader" style="float:left; height:100px; width:250px;">
     <p>Upload Images</p>
     <form method="POST" action="/upload" enctype="multipart/form-data">
       <p><input type="file" name="images" multiple></p>
       <p><input type="submit" value="Submit"></p>
     </form>
     </div>
-    <div class="container" id="search" style="float:left; height:100px; width:300px;">
+    <div class="container" id="search" style="float:left; height:100px; width:250px;">
         <p>Remove Images</p>
         <form method="POST" action="/remove_upload">
             <input type="submit" name="remove_button" value="Delete Upload">
         </form>
     </div>
 
-    <div class="container" id="search" style="float:left; height:100px; width:300px;">
+    <div class="container" id="search" style="float:left; height:100px; width:250px;">
     <p>Choose Query Image</p>
     <form method="POST" action="/similarimages" enctype="multipart/form-data">
         <p><input type="file" name="query" id="query"></p>
@@ -28,10 +28,17 @@
     </form>
     </div>
     
-    <div class="container" id="duplicate" style="overflow:hidden; height:100px; width:300px;">
+    <div class="container" id="duplicate" style="float:left; height:100px; width:250px;">
         <p>Find Duplicate Images</p>
         <form method="POST" action="/duplicates">
             <input type="submit" name="duplicate_button" value="Show Duplicates" >
+        </form>
+     </div>
+
+     <div class="container" id="group" style="overflow:hidden; height:100px; width:250px;">
+        <p>Group Images</p>
+        <form method="POST" action="/group">
+            <input type="submit" name="group_button" value="Group Images" >
         </form>
      </div>
     <span>
