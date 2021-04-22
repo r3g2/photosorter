@@ -55,10 +55,10 @@ def extract_features(model,ds):
     img_features = []
     for x in iter(ds):
         img = tf.expand_dims(tf.image.resize(x['image'],[224,224]),axis=0)
-        if img.shape.as_list() != [1,224,224,3]:
-            print(img.shape,x['fname'].numpy().decode('utf-8'))
-        features = model.predict(img,batch_size=1)
-        img_features.append((x['fname'].numpy().decode('utf-8'),features))
+        if img.shape.as_list() == [1,224,224,3]:
+    
+            features = model.predict(img,batch_size=1)
+            img_features.append((x['fname'].numpy().decode('utf-8'),features))
     return img_features
 
 def cluster(features,n_clusters=10,normalize=True):
@@ -100,7 +100,7 @@ def extract_orb_features(image,nfeatures=500,size=(256,256)):
     '''
     if image.shape[2] > 1:
         cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
-    image = cv2.resize(image,size)
+    #image = cv2.resize(image,size)
     orb=cv2.ORB_create(nfeatures = nfeatures, scoreType=cv2.ORB_FAST_SCORE)
     keypoints,descriptors = orb.detectAndCompute(image,None)
     
@@ -136,36 +136,38 @@ def feature_comparison(des1,des2):
 
  #################### TESTING ##############################
 def test_extract_orb_features(size = (128,128)):
-    img1 = cv2.imread("../data/PhotoSorter_images/0100.jpg")
-    img2 = cv2.imread("../data/PhotoSorter_images/0101.jpg")
-    img1 = cv2.resize(img1,size)
-    img2 = cv2.resize(img2,size)
+    data_dir = ("/Users/rickgentry/Spring 2021/computer_vision/final_project/data/PhotoSorter_images")
+    img1 = cv2.imread(os.path.join(data_dir,"20160601_111919.jpg"))
+    img2 = cv2.imread(os.path.join(data_dir,"20160601_111922.jpg"))
     img1_features = extract_orb_features(img1)
-    img2_features = extract_orb_features(img1)
+    img2_features = extract_orb_features(img2)
     good_matches = feature_comparison(img1_features[1],img2_features[1])
     print(len(img1_features[0]))
     print(len(good_matches))
+    img3 = cv2.drawMatchesKnn(img1,img1_features[0],img2,img2_features[0],good_matches,None,flags=2)
+    plt.imshow(img3)
+    plt.show()
 
 def main():
     data_path = "/Users/rickgentry/Spring 2021/computer_vision/final_project/data/PhotoSorter_images"
-    # ps = PhotoSorter(data_path)
-    # ps.load_images()
-    # if ps.photos:
-    #     features = []
-    #     for photo in ps.photos:
+    ps = PhotoSorter(data_path)
+    ps.load_images()
+    if ps.photos:
+        features = []
+        for photo in ps.photos:
 
-    #         features.append(extract_orb_features(photo.data))
-    # num_good_matches = 0
-    # matches = []
-    # for i in range(len(ps.photos)):
-    #     good_matches = feature_comparison(features[0][1],features[i][1])
-    #     num_good_matches = len(good_matches)
+            features.append(extract_orb_features(photo.data))
+    num_good_matches = 0
+    matches = []
+    for i in range(len(ps.photos)):
+        good_matches = feature_comparison(features[0][1],features[i][1])
+        num_good_matches = len(good_matches)
 
-    #     matches.append(num_good_matches) 
-    #     top_indices = sorted(range(len(matches)), key=lambda i: matches[i], reverse=True)[:10]
+        matches.append(num_good_matches) 
+        top_indices = sorted(range(len(matches)), key=lambda i: matches[i], reverse=True)[:10]
 
-    # closest_imgs = [ps.photos[ind].data for ind in top_indices]
-    # show_images(2,5,closest_imgs)
+    closest_imgs = [ps.photos[ind].data for ind in top_indices]
+    show_images(2,5,closest_imgs)
 
 
 

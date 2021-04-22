@@ -40,7 +40,7 @@ class PhotoSorter:
             try:
                 image_data = cv2.imread(os.path.join(self.image_dir,fname))
                 resized_data = cv2.resize(image_data,size,interpolation=resize_method)
-                color = True if resized_data.shape[2] == 3 else False
+                color = True if (len(resized_data.shape) and resized_data.shape[2] == 3) else False
                 photos.append(Photo(fname,resized_data,self.image_dir,color=color))
             except Exception as e:
                 print("Couldn't load %s because %s" % (fname,e))
@@ -145,6 +145,34 @@ class PhotoSorter:
         
 
 #################### TESTING ##########################
+def test_image_load():
+    data_path = "/Users/rickgentry/Spring 2021/computer_vision/final_project/photosorter/uploads/colored_images"
+    ps = PhotoSorter(data_path)
+    ps.load_images()
+def test_orb_matching():
+    data_path = "/Users/rickgentry/Spring 2021/computer_vision/final_project/data/PhotoSorter_images"
+    ps = PhotoSorter(data_path)
+    ps.load_images()
+    if ps.photos:
+        features = []
+        for photo in ps.photos:
+
+            features.append(extract_orb_features(photo.data))
+    num_good_matches = 0
+    matches = []
+    for i in range(len(ps.photos)):
+        good_matches = feature_comparison(features[0][1],features[i][1])
+        num_good_matches = len(good_matches)
+
+        matches.append(num_good_matches) 
+        top_indices = sorted(range(len(matches)), key=lambda i: matches[i], reverse=True)[:9]
+
+    closest_imgs = [ps.photos[ind].data for ind in top_indices]
+    show_images(2,5,[ps.photos[0].data] + closest_imgs)
+
+
+
+
 def test_query_similar():
     data_path = "/Users/rickgentry/Spring 2021/computer_vision/final_project/data/test_data"
     ps = PhotoSorter(data_path)
@@ -154,7 +182,7 @@ def test_query_similar():
 
 
 def test_get_image_clusters():
-    data_path = "/Users/rickgentry/Spring 2021/computer_vision/final_project/data/color_test_data"
+    data_path = "/Users/rickgentry/Spring 2021/computer_vision/final_project/photosorter/uploads/colored_images"
     kmeans,features = cluster_images(data_path)
     filepaths = [t[0] for t in features]
     groups = get_image_clusters(filepaths,kmeans)
